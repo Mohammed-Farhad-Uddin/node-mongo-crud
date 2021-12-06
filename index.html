@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>hello i am going to use mongo database</h1>
+    <form action="/addProduct" method="post">
+        <input type="text" name="name" placeholder="name">
+        <input type="text" name="price" placeholder="price">
+        <input type="text" name="quantity" placeholder="quantity">
+        <button type="submit">Add Product</button>
+    </form>
+        <div id="products"></div>
+
+        <div id="update"></div>
+    <script>
+        const allProducts=()=>{
+            fetch('http://localhost:3000/products')
+        .then(res=>res.json())
+        .then(data=>{
+            console.log(data)
+            const container=document.getElementById('products')
+            container.innerHTML=''//ei ta update product e allProduct k abr call korle div ta khali kore dibe jate agher product gula second time show na hoi.
+            data.forEach(item => { 
+                const para=document.createElement('p');
+                para.innerHTML=`<strong>name:${item.name}</strong> price:${item.price}  quantity:${item.quantity}
+                <button onclick="loadToUpdateProduct('${item._id}')">Update</button>
+                <button onclick="deleteProduct(event,'${item._id}')">Delete</button> `
+                // ${item._id} ei tar 2 pase single cotation dewar krn holo _id ta string hisave ace
+                
+                container.appendChild(para)
+                });
+            })
+        }
+        allProducts()
+
+
+
+        const deleteProduct=(event,id)=>{
+            // console.log(event.target.parentNode)//parentNode <p> tag ta nibe jei tar delete button click kora hobe
+            // console.log(id)
+            fetch(`/delete/${id}`,{
+                method:"DELETE"
+            })
+            .then(res=>res.json())
+            .then(data=>{
+                //  console.log(data)
+                if(data){
+                    event.target.parentNode.style.display="none"
+                }
+            })
+        }
+
+        const loadToUpdateProduct=(id)=>{
+            fetch(`/loadToUpdateProduct/${id}`)
+            .then(res=>res.json())
+            .then(data=>{
+                // console.log(data)
+                const update=document.getElementById("update")
+                update.innerHTML=`Price:<input value=${data.price} id="price"></input>
+                <br>
+                Quantity:<input value=${data.quantity} id="quantity"></input>
+                <br>
+                <button onclick="updateProduct('${data._id}')">Click to Update</button>
+                `
+            })
+        }
+        function updateProduct(id){
+            // console.log(id+"update")
+            const price=document.getElementById('price').value;
+            const quantity=document.getElementById('quantity').value;
+            const product={id,price,quantity};
+            fetch(`/updateProuct/${id}`,{
+                method:"PATCH",
+                body: JSON.stringify(product),
+                headers: {
+                'Content-type': 'application/json; charset=UTF-8',
+                },
+            })
+            .then(res=>res.json())
+            .then(data=>{
+                // console.log("updated")
+                if(data){
+                    allProducts()
+                    const update=document.getElementById("update")
+                    update.innerHTML=''
+                }
+            })
+        }
+
+    </script>
+</body>
+</html>
